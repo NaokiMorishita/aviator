@@ -5,9 +5,52 @@ require 'json'
 # This class is implemented using composition rather than inheritance so
 # that we have control over what operations it exposes to peers.
 class Hashish
+  @elimination_max_recursive_time = 10
+
+  class << self
+    # (Shota) Hashish sometimes causes serious troubles so there are some cases
+    # in which this should be convereted into Hash beforehand.
+    def eliminate_hashish(obj)
+      _convert_hashish_to_hash(obj, 1)
+    end
+
+    private
+
+    def _convert_hashish_to_hash(obj, recursive_count)
+      r = recursive_count
+      return obj if r > @elimination_max_recursive_time
+
+      if obj.is_a? Hashish
+        obj = _convert_hashish_to_hash(obj.to_hash, r+1)
+      elsif obj.is_a? Array
+        obj.each_with_index {|v, i| obj[i] = _convert_hashish_to_hash(v, r+1) }
+      elsif obj.is_a? Hash
+        obj.each_key {|k| obj[k] = _convert_hashish_to_hash(obj[k], r+1) }
+      elsif obj.instance_variables.size != 0
+        obj.instance_variables.each do |v_name|
+          v = obj.instance_variable_get(v_name)
+          obj.instance_variable_set(v_name, _convert_hashish_to_hash(v, r+1))
+        end
+      end
+
+      return obj
+    end
+  end
+
+
   include Enumerable
 
+  # Hashish did not support all of json format! Hashish expects to have a
+  # json which begins with "{" and ends with "}" so it can not deal with
+  # json like Array:
+  #
+  #   [{ ... }, { ... },...]
+  #
+  # Now Hashish will envelop an target object if it receives an "Array" json.
   def initialize(hash={})
+    if hash.is_a? Array
+      hash = {data: hash}
+    end
     @hash = hash.dup
     stringify_keys
     hashishify_values
@@ -83,6 +126,10 @@ class Hashish
 
     str = str[0...-1] + " }"
     str
+  end
+
+  def dig(*keys)
+    @hash.dig(*keys)
   end
 
   private
