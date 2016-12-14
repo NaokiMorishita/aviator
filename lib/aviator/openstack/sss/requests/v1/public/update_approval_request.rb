@@ -16,7 +16,7 @@ module Aviator
     end
 
     def http_method
-      :get
+      :put
     end
 
     def url
