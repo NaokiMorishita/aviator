@@ -18,6 +18,8 @@ module Aviator
       optional_params.each do |key|
         p[:network][key] = params[key] if params[key]
       end
+
+      return p
     end
 
     def http_method
