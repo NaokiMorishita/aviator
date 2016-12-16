@@ -1,5 +1,5 @@
 module Aviator
-  define_request :delete_network,
+  define_request :delete_esi_network,
     :inherit => [:openstack, :common, :'v2', :public, :base] do
     meta :service, :network
 
