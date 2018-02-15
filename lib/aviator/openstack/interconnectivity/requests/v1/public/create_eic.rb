@@ -28,7 +28,7 @@ module Aviator
     end
 
     def url
-      "#{base_url}/ecc/mCICs/#{params[:mcic_id]}/CICs/"
+      "#{base_url}/ecc/mCICs/#{params[:mcic_id]}/CICs"
     end
   end
 end
